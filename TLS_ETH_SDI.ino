@@ -13,7 +13,7 @@
 
 #define VERSION "TLS_ETH_SDI_24.01.23_VER02"
 
-#define MAX_CHAN_NUM  5
+#define MAX_CHAN_NUM  8
 #define TIMEOUT       2000  // connecting to switcher
 //#define KEEPALIVE     2000  // comment to disable keepalive
 #define TTK           1000  // time to kill - cas do ktoreho ak strizna neodpovie, restartuje sa spojenie

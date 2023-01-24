@@ -235,7 +235,7 @@
 
 		/* ENABLE switches */
 
-		.container#a table#switches{
+		.container#a table#switches {
 			width: 70.5%;
 			margin: 0 15% 0px 14%;
 		}
@@ -379,12 +379,18 @@
 					"&T3=" + formData.get("S13") +
 					"&T4=" + formData.get("S14") +
 					"&T5=" + formData.get("S15") +
+					"&T6=" + formData.get("S16") +
+					"&T7=" + formData.get("S17") +
+					"&T8=" + formData.get("S18") +
 					"&IPaddr2=" + formData.get("IPaddr2") +
 					"&T1=" + formData.get("S21") +
 					"&T2=" + formData.get("S22") +
 					"&T3=" + formData.get("S23") +
 					"&T4=" + formData.get("S24") +
-					"&T5=" + formData.get("S25");
+					"&T5=" + formData.get("S25") +
+					"&T6=" + formData.get("S26") +
+					"&T7=" + formData.get("S27") +
+					"&T8=" + formData.get("S28");
 
 				if (formData.has("en1")) {
 					newRequest += "&en1"
@@ -425,13 +431,13 @@
 		<div class="container" id="a">
 			<table id="switches">
 				<td>
-				<div class="switches" id="vMix_1">
-					<h3 style="text-align: center;">vMix 1</h3>
-					<div class="switch">
-						<input id="switch-1" type="checkbox" class="switch-input" name="en1" ~sw1.enable^>
-						<label for="switch-1" class="switch-label">Switch</label>
-					</div><br>
-				</div>
+					<div class="switches" id="vMix_1">
+						<h3 style="text-align: center;">vMix 1</h3>
+						<div class="switch">
+							<input id="switch-1" type="checkbox" class="switch-input" name="en1" ~sw1.enable^>
+							<label for="switch-1" class="switch-label">Switch</label>
+						</div><br>
+					</div>
 				</td>
 				<td>
 					<div class="switches" id="ATEM">
@@ -509,6 +515,27 @@
 							value="~sw1.inputNumber[4]^"></td>
 					<td><input type="number" id="T5" name="S25" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[4]^"></td>
+				</tr>
+				<tr>
+					<td><label for="T6">6. Camera</label></td>
+					<td><input type="number" id="T6" name="S16" min="0" max="255" placeholder="vMix input number"
+							value="~sw1.inputNumber[5]^"></td>
+					<td><input type="number" id="T6" name="S26" min="0" max="255" placeholder="vMix input number"
+							value="~sw2.inputNumber[5]^"></td>
+				</tr>
+				<tr>
+					<td><label for="T7">7. Camera</label></td>
+					<td><input type="number" id="T7" name="S17" min="0" max="255" placeholder="vMix input number"
+							value="~sw1.inputNumber[6]^"></td>
+					<td><input type="number" id="T7" name="S27" min="0" max="255" placeholder="vMix input number"
+							value="~sw2.inputNumber[6]^"></td>
+				</tr>
+				<tr>
+					<td><label for="T8">8. Camera</label></td>
+					<td><input type="number" id="T8" name="S18" min="0" max="255" placeholder="vMix input number"
+							value="~sw1.inputNumber[7]^"></td>
+					<td><input type="number" id="T8" name="S28" min="0" max="255" placeholder="vMix input number"
+							value="~sw2.inputNumber[7]^"></td>
 				</tr>
 			</table>
 		</div>
