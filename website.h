@@ -438,7 +438,7 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("</div>"));
      client.print(F("<table id=\"channels\">"));
      client.print(F("<tr id=\"title\">"));
-     client.print(F("<th colspan=\"3\">vMix input number setup</th>"));
+     client.print(F("<th colspan=\"4\">vMix input number setup</th>"));
      client.print(F("</tr>"));
      client.print(F("<tr>"));
      client.print(F("<th id=\"firstCol\"></th>"));
