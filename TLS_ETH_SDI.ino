@@ -13,8 +13,9 @@
 
 #define VERSION "TLS_ETH_SDI_24.01.23_VER02"
 
+#define MAX_CHAN_NUM  5
 #define TIMEOUT       2000  // connecting to switcher
-#define KEEPALIVE     2000  // comment to disable keepalive
+//#define KEEPALIVE     2000  // comment to disable keepalive
 #define TTK           1000  // time to kill - cas do ktoreho ak strizna neodpovie, restartuje sa spojenie
 #define RESEND        1000  // wireless hc12 resend time - default 100
 #define DEFAULT_VALUE 0b001001001001001
@@ -34,10 +35,10 @@ struct Switcher {
   uint8_t status;                 // connected or disconnected
   uint8_t initialized;            // runned
   uint16_t code = DEFAULT_VALUE;  // 4681;
-  uint8_t inputNumber[5] = {1, 2, 3, 4, 5};
+  uint8_t inputNumber[MAX_CHAN_NUM] = {0};
   uint8_t keepAliveFlag = 0;
-  unsigned long cMillisKeepAlive;                                       // keepAlive
-  uint8_t tallyValue[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};  // program, preview
+  unsigned long cMillisKeepAlive;             // keepAlive
+  uint8_t tallyValue[MAX_CHAN_NUM][2] = {0};  // program, preview
 };
 
 // BMD_SDITallyControl_I2C sdiTallyControl(0x6E);
@@ -70,14 +71,14 @@ void setup() {
   Serial2.printf("\n\n\rversion: %s\n", VERSION);
 
   vMix_1.pos = 0;  // EEPROM position
-  vMix_2.pos = 10;
-  ATEM.pos = 20;
+  vMix_2.pos = 4 + MAX_CHAN_NUM + 1;
+  ATEM.pos = 2 * (4 + MAX_CHAN_NUM + 1);
   Ethernet.init(10);
 #ifdef ATEM_enable
   sdiTallyControl.begin();
   sdiTallyControl.setOverride(true);
 #else
-  Serial2.print("BMD_Shield disabled by program\n");
+  Serial2.print("BMD_Shield disabled by program\r\n");
 #endif
 
 #ifdef EEPROMe
@@ -196,13 +197,13 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
     if (p_dataEN != NULL) {
       strcpy(sw.enable, "checked");
 #ifdef EEPROMe
-      EEPROM.write(sw.pos + 9, 1);
+      EEPROM.write(sw.pos + 4 + MAX_CHAN_NUM, 1);
 #endif
       p_dataEN = NULL;
     } else {
       memset(sw.enable, '\0', sizeof(sw.enable));
 #ifdef EEPROMe
-      EEPROM.write(sw.pos + 9, 0);
+      EEPROM.write(sw.pos + 4 + MAX_CHAN_NUM, 0);
 #endif
       p_dataEN = NULL;
     }
@@ -230,7 +231,7 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
 #endif
     }
     p_data += 3;  // move to inputsNumbers ("T1=")
-    for (uint8_t q = 0; q < 5; q++) {
+    for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
       uint8_t count = 0;
       while (*p_data != '&' && *p_data != ' ') {
         // Serial.print((*p_data) - 48);
@@ -249,7 +250,7 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
 
 #ifdef DEBUG
     Serial2.printf("\nSwitcher %d inputNmbr:", sw.pos);
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < MAX_CHAN_NUM; i++) {
       Serial2.print(sw.inputNumber[i]);
       Serial2.print("-");
     }
@@ -262,8 +263,8 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
     }
 
     if (strstr(message, "save")) {
-      for (uint8_t i = 0; i < 5; i++) {
-        EEPROM.write(i + 4 + sw.pos, sw.inputNumber[i]);
+      for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) {
+        EEPROM.write(sw.pos + 4 + i, sw.inputNumber[i]);
         // Serial.println("saving input numbers");
       }
       sw.p_save = NULL;
@@ -283,32 +284,34 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
   }
 }
 
-void processConfData(char *enable, Switcher &sw) {  // process ATEM
+void processConfData(char *enable, Switcher &atem) {  // process ATEM
   if (strstr(message, "IPaddr1=") != NULL) {
     char *p_dataEN = strstr(message, enable);  // check if switcher is enable
     if (p_dataEN != NULL) {
-      strcpy(sw.enable, "checked");
+      strcpy(atem.enable, "checked");
 #ifdef EEPROMe
-      EEPROM.write(sw.pos + 9, 1);
+      EEPROM.write(atem.pos + 4 + MAX_CHAN_NUM, 1);
 #endif
       p_dataEN = NULL;
     } else {
-      memset(sw.enable, '\0', sizeof(sw.enable));
+      memset(atem.enable, '\0', sizeof(atem.enable));
 #ifdef EEPROMe
-      EEPROM.write(sw.pos + 9, 0);
+      EEPROM.write(atem.pos + 4 + MAX_CHAN_NUM, 0);
 #endif
       p_dataEN = NULL;
     }
 #ifdef DEBUG
-    Serial2.printf("\nSwitcher %d enable: %s\n\n", sw.pos, sw.enable);
+    Serial2.printf("\nSwitcher %d enable: %s\n\n", atem.pos, atem.enable);
 #endif
   }
+
+  // TODO: checkInputNumberProfile()
 }
 
 void checkInputNumberProfile(Switcher &sw) {
   uint8_t flag = 0;
-  for (uint8_t i = 0; i < 5; i++) {
-    if (EEPROM.read(sw.pos + i + 4) != sw.inputNumber[i]) {
+  for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) {
+    if (EEPROM.read(sw.pos + 4 + i) != sw.inputNumber[i]) {
       flag++;
     }
   }
@@ -465,6 +468,29 @@ void processSwitcherData(char *gdata, byte len, Switcher &sw) {
       }
     }
 
+    for (int q = 5; q < MAX_CHAN_NUM; q++) {
+      if (sw.inputNumber[q] == 0) {
+        sw.tallyValue[q][0] = false;
+        sw.tallyValue[q][1] = false;
+      } else {
+        p_data = default_p + (sw.inputNumber[q] - 1);
+        switch (*p_data) {
+          case '0':
+            sw.tallyValue[q][0] = false;
+            sw.tallyValue[q][1] = false;
+            break;
+          case '2':
+            sw.tallyValue[q][0] = false;
+            sw.tallyValue[q][1] = true;
+            break;
+          case '1':
+            sw.tallyValue[q][0] = true;
+            sw.tallyValue[q][1] = false;
+            break;
+        }
+      }
+    }
+
     sendCodeWireless();
     setBMD_SDI_OUT();
 
@@ -479,11 +505,11 @@ void processSwitcherData(char *gdata, byte len, Switcher &sw) {
 }
 
 /*ATEM*/
-void ATEM_handle() {
+void ATEM_handle() {                                               // TODO generate ATEM.code
   if (memcmp(ATEM.enable, "checked", sizeof(ATEM.enable)) == 0) {  // check if BMDSDIControl is enabled
     uint8_t send = false;
     if (sdiTallyControl.available()) {
-      for (int q = 0; q < 5; q++) {
+      for (int q = 0; q < MAX_CHAN_NUM; q++) {
         bool program;
         bool preview;
         sdiTallyControl.getCameraTally((q + 1), program, preview);
@@ -545,8 +571,8 @@ void sendCodeWireless() {
 
 void setBMD_SDI_OUT() {
   Serial2.printf("SDI_OUT: ");
-  uint8_t finalTallyValue[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
-  for (uint8_t q = 0; q < 5; q++) {
+  uint8_t finalTallyValue[MAX_CHAN_NUM][2] = {0};
+  for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
     if (vMix_1.tallyValue[q][0] || vMix_2.tallyValue[q][0] || ATEM.tallyValue[q][0]) {
       finalTallyValue[q][0] = true;
     }
@@ -554,17 +580,19 @@ void setBMD_SDI_OUT() {
       finalTallyValue[q][1] = true;
     }
     Serial2.printf("[%d, %d] ", finalTallyValue[q][0], finalTallyValue[q][1]);
+#ifdef ATEM_enable
     sdiTallyControl.setCameraTally((q + 1), finalTallyValue[q][0], finalTallyValue[q][1]);
+#endif
   }
   Serial2.printf("\n");
 }
 
 void setCodeDefaulte(Switcher &sw) {
   sw.code = DEFAULT_VALUE;
-  for (uint8_t q = 0; q < 5; q++) {
+  for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
     sw.tallyValue[q][0] = 0;
   }
-  for (uint8_t q = 0; q < 5; q++) {
+  for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
     sw.tallyValue[q][1] = 0;
   }
 }
@@ -574,17 +602,17 @@ void eepromRead(Switcher &sw) {
   for (uint8_t i = 0; i < 4; i++) {
     sw.IPaddr[i] = EEPROM.read(sw.pos + i);
   }
-  for (uint8_t i = 0; i < 5; i++) {
-    sw.inputNumber[i] = EEPROM.read(sw.pos + i + 4);
+  for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) {
+    sw.inputNumber[i] = EEPROM.read(sw.pos + 4 + i);
   }
-  if (EEPROM.read(sw.pos + 9) == 1) {
+  if (EEPROM.read(sw.pos + 4 + MAX_CHAN_NUM) == 1) {
     strcpy(sw.enable, "checked");
   } else {
     memset(sw.enable, '\0', sizeof(sw.enable));
   }
 }
 void eepromRead_ATEM() {
-  if (EEPROM.read(ATEM.pos + 9) == 1) {
+  if (EEPROM.read(ATEM.pos + 4 + MAX_CHAN_NUM) == 1) {
     strcpy(ATEM.enable, "checked");
   } else {
     memset(ATEM.enable, '\0', sizeof(ATEM.enable));
@@ -608,61 +636,3 @@ void eepromRead_ATEM() {
   static const uint8_t MACRAW      = 0x42; 66
   static const uint8_t PPPOE       = 0x5F; 95
   */
-
-/*ATEM*/
-/*void ATEM_handle() {
-  if (memcmp(vMix_2.enable, "checked", sizeof(vMix_2.enable)) == 0) {
-    if (!vMix_2.initialized) {
-      Serial.println("Starting ATEM");
-      AtemSwitcher.begin(vMix_2.IPaddr);
-      AtemSwitcher.serialOutput(2);
-      AtemSwitcher.connect();
-      vMix_2.initialized = true;
-    }
-    // Check for packets, respond to them etc. Keeping the connection alive!
-    // VERY important that this function is called all the time - otherwise connection might be lost because packets from the switcher is
-    // overlooked and not responded to.
-    AtemSwitcher.runLoop(0);
-
-    activeME0 = AtemSwitcher.getProgramInputVideoSource(0);
-    previewME0 = AtemSwitcher.getPreviewInputVideoSource(0);
-
-    uint8_t activeME0_2;
-    if (AtemSwitcher.getTransitionInTransition(0)) {
-      activeME0_2 = previewME0;
-      processCode(activeME0_2);
-    }
-
-    if (!AtemSwitcher.status) {
-      activeME0 = 0;
-      previewME0 = 0;
-    }
-
-    Lcode = vMix_2.code;
-    processCode(activeME0_2);
-
-    if (vMix_2.code != Lcode) {
-#ifdef DEBUG
-      Serial.printf("%d(%d)--", vMix_2.pos, AtemSwitcher.getUDPSocketNumber());
-      Serial.println(vMix_2.code, BIN);
-#endif
-      sendCode();
-    }
-  } else {
-    vMix_2.code = DEFAULT_VALUE;
-    vMix_2.initialized = false;
-    AtemSwitcher.stop();
-  }
-}*/
-
-/*void processCode() {
-  for (uint16_t q = 0; q < 5; q++) {
-    if (vMix_2.inputNumber[q] == activeME0) {
-      vMix_2.code = (~(0b111 << (q * 3)) & vMix_2.code) | ACTIVE << (q * 3);
-    } else if (vMix_2.inputNumber[q] == previewME0) {
-      vMix_2.code = (~(0b111 << (q * 3)) & vMix_2.code) | PREVIEW << (q * 3);
-    } else {
-      vMix_2.code = (~(0b111 << (q * 3)) & vMix_2.code) | NOTHING << (q * 3);
-    }
-  }
-}*/
