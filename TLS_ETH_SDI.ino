@@ -13,9 +13,9 @@
 
 #define VERSION "TLS_ETH_SDI_24.01.23_VER02"
 
-#define MAX_CHAN_NUM  8
-#define TIMEOUT       2000  // connecting to switcher
-//#define KEEPALIVE     2000  // comment to disable keepalive
+#define MAX_CHAN_NUM 8
+#define TIMEOUT      2000  // connecting to switcher
+// #define KEEPALIVE     2000  // comment to disable keepalive
 #define TTK           1000  // time to kill - cas do ktoreho ak strizna neodpovie, restartuje sa spojenie
 #define RESEND        1000  // wireless hc12 resend time - default 100
 #define DEFAULT_VALUE 0b001001001001001
@@ -61,7 +61,7 @@ const char save[] = "<button class=\"button\" id=\"save\" name=\"save\" type=\"s
 const char *p_save;
 unsigned long cMillisTimeout;  // timeout
 unsigned long cMillisResend;   // resend
-char message[200];
+char message[300];
 
 uint8_t flag = 0;
 
@@ -139,7 +139,7 @@ void configClientConnect() {
         if ((message + sizeof(message)) > p_message) {
           p_message++;
         } else {
-          Serial2.println("\nFATAL ERROR:pointer out of string");
+          Serial2.println("\n\rFATAL ERROR:pointer out of string");
           Serial2.print("start:");
           Serial2.println((int)&message);
           Serial2.print("current:");
@@ -151,7 +151,7 @@ void configClientConnect() {
           if (strstr(message, "HTTP/1.1") != NULL) {
             processConfData("IPaddr1=", "en1", vMix_1);
             processConfData("IPaddr2=", "en2", vMix_2);
-            processConfData("en3", ATEM);
+            processConfDataATEM();
 
             vMixHandle(vMixClient_1, vMix_1);
             vMixHandle(vMixClient_2, vMix_2);
@@ -178,7 +178,7 @@ void configClientConnect() {
       }
     }
     delay(1);
-    Serial2.printf("Disconnecting HTTP client, on socket:%d\n", conf.getSocketNumber());
+    Serial2.printf("\nDisconnecting HTTP client, on socket:%d\n", conf.getSocketNumber());
     conf.stop();
 
     vMixClient_1.print("TALLY\r\n");
@@ -230,7 +230,8 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
       Serial2.print(".");
 #endif
     }
-    p_data += 3;  // move to inputsNumbers ("T1=")
+
+    p_data += 4;  // move to inputsNumbers ("S11=")
     for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
       uint8_t count = 0;
       while (*p_data != '&' && *p_data != ' ') {
@@ -245,17 +246,8 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
         count++;
         p_data++;
       }
-      p_data += 4;
+      p_data += 5;
     }
-
-#ifdef DEBUG
-    Serial2.printf("\nSwitcher %d inputNmbr:", sw.pos);
-    for (int i = 0; i < MAX_CHAN_NUM; i++) {
-      Serial2.print(sw.inputNumber[i]);
-      Serial2.print("-");
-    }
-    Serial2.printf("\nSwitcher %d enable: %s", sw.pos, sw.enable);
-#endif
 
 #ifdef EEPROMe
     for (uint8_t i = 0; i < 4; i++) {
@@ -271,41 +263,90 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
     } else {
       checkInputNumberProfile(sw);
     }
-#ifdef DEBUG
-    Serial2.printf("\nSwitcher %d inputSave: %s", sw.pos, sw.p_save);
-#endif
 
-    if (vMix_1.p_save != NULL || vMix_2.p_save != NULL) {  // check if at least one swithchers input profile has changed
+    if (vMix_1.p_save != NULL || vMix_2.p_save != NULL || ATEM.p_save != NULL) {  // check if at least one swithchers input profile has changed
       p_save = save;
     } else {
       p_save = NULL;
     }
 #endif
+
+#ifdef DEBUG
+    Serial2.printf("\nSwitcher %d inputNmbr:", sw.pos);
+    for (int i = 0; i < MAX_CHAN_NUM; i++) {
+      Serial2.print(sw.inputNumber[i]);
+      Serial2.print("-");
+    }
+    Serial2.printf("\nSwitcher %d enable: %s", sw.pos, sw.enable);
+    Serial2.printf("\nSwitcher %d inputSave: %s", sw.pos, sw.p_save);
+#endif
   }
 }
 
-void processConfData(char *enable, Switcher &atem) {  // process ATEM
-  if (strstr(message, "IPaddr1=") != NULL) {
-    char *p_dataEN = strstr(message, enable);  // check if switcher is enable
+void processConfDataATEM() {
+  char *p_data = strstr(message, "ATEM");
+  if (p_data != NULL) {                        // check if it contains any data
+    char *p_dataEN = strstr(message, "en3");  // check if switcher is enable
     if (p_dataEN != NULL) {
-      strcpy(atem.enable, "checked");
+      strcpy(ATEM.enable, "checked");
 #ifdef EEPROMe
-      EEPROM.write(atem.pos + 4 + MAX_CHAN_NUM, 1);
+      EEPROM.write(ATEM.pos + 4 + MAX_CHAN_NUM, 1);
 #endif
       p_dataEN = NULL;
     } else {
-      memset(atem.enable, '\0', sizeof(atem.enable));
+      memset(ATEM.enable, '\0', sizeof(ATEM.enable));
 #ifdef EEPROMe
-      EEPROM.write(atem.pos + 4 + MAX_CHAN_NUM, 0);
+      EEPROM.write(ATEM.pos + 4 + MAX_CHAN_NUM, 0);
 #endif
       p_dataEN = NULL;
     }
+
+    p_data += 9;  // move to inputsNumbers ("ATEM&S31=")
+    for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
+      uint8_t count = 0;
+      while (*p_data != '&' && *p_data != ' ') {
+        // Serial.print((*p_data) - 48);
+        uint8_t digit = (*p_data) - 48;
+        if (count != 0) {
+          ATEM.inputNumber[q] *= 10;
+          ATEM.inputNumber[q] += digit;
+        } else {
+          ATEM.inputNumber[q] = digit;
+        }
+        count++;
+        p_data++;
+      }
+      p_data += 5;
+    }
+
+#ifdef EEPROMe
+    if (strstr(message, "save")) {
+      for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) {
+        EEPROM.write(ATEM.pos + 4 + i, ATEM.inputNumber[i]);
+        // Serial.println("saving input numbers");
+      }
+      ATEM.p_save = NULL;
+    } else {
+      checkInputNumberProfile(ATEM);
+    }
+
+    if (vMix_1.p_save != NULL || vMix_2.p_save != NULL || ATEM.p_save != NULL) {  // check if at least one swithchers input profile has changed
+      p_save = save;
+    } else {
+      p_save = NULL;
+    }
+#endif
+
 #ifdef DEBUG
-    Serial2.printf("\nSwitcher %d enable: %s\n\n", atem.pos, atem.enable);
+    Serial2.printf("\nSwitcher %d inputNmbr:", ATEM.pos);
+    for (int i = 0; i < MAX_CHAN_NUM; i++) {
+      Serial2.print(ATEM.inputNumber[i]);
+      Serial2.print("-");
+    }
+    Serial2.printf("\nSwitcher %d enable: %s", ATEM.pos, ATEM.enable);
+    Serial2.printf("\nSwitcher %d inputSave: %s", ATEM.pos, ATEM.p_save);
 #endif
   }
-
-  // TODO: checkInputNumberProfile()
 }
 
 void checkInputNumberProfile(Switcher &sw) {
@@ -505,7 +546,7 @@ void processSwitcherData(char *gdata, byte len, Switcher &sw) {
 }
 
 /*ATEM*/
-void ATEM_handle() {                                               // TODO generate ATEM.code
+void ATEM_handle() {   // TODO generate ATEM.code
   if (memcmp(ATEM.enable, "checked", sizeof(ATEM.enable)) == 0) {  // check if BMDSDIControl is enabled
     uint8_t send = false;
     if (sdiTallyControl.available()) {

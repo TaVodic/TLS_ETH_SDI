@@ -202,8 +202,8 @@
 		}
 
 		.container#a table {
-			margin: 0 15% 10px 15%;
-			width: 70%;
+			margin: 0 10% 10px 10%;
+			width: 80%;
 			vertical-align: top;
 		}
 
@@ -374,40 +374,47 @@
 
 				let newRequest = "";
 				newRequest += "IPaddr1=" + formData.get("IPaddr1") +
-					"&T1=" + formData.get("S11") +
-					"&T2=" + formData.get("S12") +
-					"&T3=" + formData.get("S13") +
-					"&T4=" + formData.get("S14") +
-					"&T5=" + formData.get("S15") +
-					"&T6=" + formData.get("S16") +
-					"&T7=" + formData.get("S17") +
-					"&T8=" + formData.get("S18") +
-					"&IPaddr2=" + formData.get("IPaddr2") +
-					"&T1=" + formData.get("S21") +
-					"&T2=" + formData.get("S22") +
-					"&T3=" + formData.get("S23") +
-					"&T4=" + formData.get("S24") +
-					"&T5=" + formData.get("S25") +
-					"&T6=" + formData.get("S26") +
-					"&T7=" + formData.get("S27") +
-					"&T8=" + formData.get("S28");
+					"&S11=" + formData.get("S11") +
+					"&S12=" + formData.get("S12") +
+					"&S13=" + formData.get("S13") +
+					"&S14=" + formData.get("S14") +
+					"&S15=" + formData.get("S15") +
+					"&S16=" + formData.get("S16") +
+					"&S17=" + formData.get("S17") +
+					"&S18=" + formData.get("S18");
+
+				newRequest += "&IPaddr2=" + formData.get("IPaddr2") +
+					"&S21=" + formData.get("S21") +
+					"&S22=" + formData.get("S22") +
+					"&S23=" + formData.get("S23") +
+					"&S24=" + formData.get("S24") +
+					"&S25=" + formData.get("S25") +
+					"&S26=" + formData.get("S26") +
+					"&S27=" + formData.get("S27") +
+					"&S28=" + formData.get("S28");
+
+				newRequest += "&ATEM" +
+					"&S31=" + formData.get("S31") +
+					"&S32=" + formData.get("S32") +
+					"&S33=" + formData.get("S33") +
+					"&S34=" + formData.get("S34") +
+					"&S35=" + formData.get("S35") +
+					"&S36=" + formData.get("S36") +
+					"&S37=" + formData.get("S37") +
+					"&S38=" + formData.get("S38");
 
 				if (formData.has("en1")) {
 					newRequest += "&en1"
 				}
-
 				if (formData.has("en2")) {
 					newRequest += "&en2"
 				}
-
 				if (formData.has("en3")) {
 					newRequest += "&en3"
 				}
-
 				if (submitterId == 'save') {
 					newRequest += "&save"
 				}
-
 				console.log("Request: ", newRequest);
 
 				window.location.replace(newRequest);
@@ -480,6 +487,7 @@
 					<th id="firstCol"></th>
 					<th>vMix 1</th>
 					<th>vMix 2</th>
+					<th>ATEM</th>
 				</tr>
 				<tr>
 					<td><label for="T1">1. Camera</label></td>
@@ -487,6 +495,8 @@
 							value="~sw1.inputNumber[0]^"></td>
 					<td><input type="number" id="T1" name="S21" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[0]^"></td>
+					<td><input type="number" id="T1" name="S31" min="0" max="255" placeholder="vMix input number"
+							value="~sw3.inputNumber[0]^"></td>
 				</tr>
 				<tr>
 					<td><label for="T2">2. Camera</label></td>
@@ -494,6 +504,8 @@
 							value="~sw1.inputNumber[1]^"></td>
 					<td><input type="number" id="T2" name="S22" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[1]^"></td>
+					<td><input type="number" id="T2" name="S32" min="0" max="255" placeholder="vMix input number"
+							value="~sw3.inputNumber[1]^"></td>
 				</tr>
 				<tr>
 					<td><label for="T3">3. Camera</label></td>
@@ -501,6 +513,8 @@
 							value="~sw1.inputNumber[2]^"></td>
 					<td><input type="number" id="T3" name="S23" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[2]^"></td>
+					<td><input type="number" id="T3" name="S33" min="0" max="255" placeholder="vMix input number"
+							value="~sw3.inputNumber[2]^"></td>
 				</tr>
 				<tr>
 					<td><label for="T4">4. Camera</label></td>
@@ -508,6 +522,8 @@
 							value="~sw1.inputNumber[3]^"></td>
 					<td><input type="number" id="T4" name="S24" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[3]^"></td>
+					<td><input type="number" id="T4" name="S34" min="0" max="255" placeholder="vMix input number"
+							value="~sw3.inputNumber[3]^"></td>
 				</tr>
 				<tr>
 					<td><label for="T5">5. Camera</label></td>
@@ -515,6 +531,8 @@
 							value="~sw1.inputNumber[4]^"></td>
 					<td><input type="number" id="T5" name="S25" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[4]^"></td>
+					<td><input type="number" id="T5" name="S35" min="0" max="255" placeholder="vMix input number"
+							value="~sw3.inputNumber[4]^"></td>
 				</tr>
 				<tr>
 					<td><label for="T6">6. Camera</label></td>
@@ -522,6 +540,8 @@
 							value="~sw1.inputNumber[5]^"></td>
 					<td><input type="number" id="T6" name="S26" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[5]^"></td>
+					<td><input type="number" id="T6" name="S36" min="0" max="255" placeholder="vMix input number"
+							value="~sw3.inputNumber[0]^"></td>
 				</tr>
 				<tr>
 					<td><label for="T7">7. Camera</label></td>
@@ -529,6 +549,8 @@
 							value="~sw1.inputNumber[6]^"></td>
 					<td><input type="number" id="T7" name="S27" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[6]^"></td>
+					<td><input type="number" id="T7" name="S37" min="0" max="255" placeholder="vMix input number"
+							value="~sw3.inputNumber[6]^"></td>
 				</tr>
 				<tr>
 					<td><label for="T8">8. Camera</label></td>
@@ -536,6 +558,8 @@
 							value="~sw1.inputNumber[7]^"></td>
 					<td><input type="number" id="T8" name="S28" min="0" max="255" placeholder="vMix input number"
 							value="~sw2.inputNumber[7]^"></td>
+					<td><input type="number" id="T8" name="S38" min="0" max="255" placeholder="vMix input number"
+							value="~sw3.inputNumber[7]^"></td>
 				</tr>
 			</table>
 		</div>
