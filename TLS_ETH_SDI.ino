@@ -11,7 +11,7 @@
 #define DHCP
 // #define ATEM_enable
 
-#define VERSION "TLS_ETH_SDI_23.01.23_RLS01"
+#define VERSION "TLS_ETH_SDI_23.01.23_VER01"
 
 #define TIMEOUT       2000  // connecting to switcher
 #define KEEPALIVE     2000  // comment to disable keepalive
