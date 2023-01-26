@@ -6,7 +6,7 @@
 
 // developed from TLS_ETH_hybrid_RLS02_22.10.22
 
-#define DEBUG
+//#define DEBUG
 #define EEPROMe
 #define DHCP
 #define ATEM_enable
@@ -134,7 +134,9 @@ void configClientConnect() {
     while (conf.connected()) {
       if (conf.available()) {
         char c = conf.read();
+#ifdef DEBUG
         Serial2.write(c);
+#endif
         *p_message = c;
         if ((message + sizeof(message)) > p_message) {
           p_message++;
@@ -638,7 +640,7 @@ void setBMD_SDI_OUT() {
 #ifdef ATEM_enable
     sdiTallyControl.setCameraTally((q + 1), finalTallyValue[q][0], finalTallyValue[q][1]);
 #endif
-  }  
+  }
 }
 
 void setCodeDefaulte(Switcher &sw) {
