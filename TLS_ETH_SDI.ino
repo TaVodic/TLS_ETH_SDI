@@ -9,20 +9,20 @@
 #define DEBUG
 #define EEPROMe
 #define DHCP
-// #define ATEM_enable
+#define ATEM_enable
 
-#define VERSION "TLS_ETH_SDI_24.01.23_VER02"
+#define VERSION "TLS_ETH_SDI_26.01.23_VER02"
 
 #define MAX_CHAN_NUM 8
 #define TIMEOUT      2000  // connecting to switcher
-// #define KEEPALIVE     2000  // comment to disable keepalive
-#define TTK           1000  // time to kill - cas do ktoreho ak strizna neodpovie, restartuje sa spojenie
-#define RESEND        1000  // wireless hc12 resend time - default 100
-#define DEFAULT_VALUE 0b001001001001001
-#define ACTIVE        3  // 3
-#define PREVIEW       2  // 2
-#define NOTHING       1  // 1
-#define CALL          4  // 4
+#define KEEPALIVE     2000  // comment to disable keepalive
+#define TTK           1000               // time to kill - cas do ktoreho ak strizna neodpovie, restartuje sa spojenie
+#define RESEND        1000               // wireless hc12 resend time - default 100
+#define DEFAULT_VALUE 0b001001001001001  // 4681
+#define ACTIVE        3                  // 3
+#define PREVIEW       2                  // 2
+#define NOTHING       1                  // 1
+#define CALL          4                  // 4
 
 byte mac[] = {0x02, 0x54, 0x4C, 0x53, 0x00, 0x04};
 uint8_t TLS_IPaddr[4] = {192, 168, 1, 118};
@@ -34,11 +34,11 @@ struct Switcher {
   const char *p_save;
   uint8_t status;                 // connected or disconnected
   uint8_t initialized;            // runned
-  uint16_t code = DEFAULT_VALUE;  // 4681;
+  uint16_t code = DEFAULT_VALUE;  // for wireless
   uint8_t inputNumber[MAX_CHAN_NUM] = {0};
   uint8_t keepAliveFlag = 0;
   unsigned long cMillisKeepAlive;             // keepAlive
-  uint8_t tallyValue[MAX_CHAN_NUM][2] = {0};  // program, preview
+  uint8_t tallyValue[MAX_CHAN_NUM][2] = {0};  // for ATEM [channel][program=0 | preview=1]
 };
 
 // BMD_SDITallyControl_I2C sdiTallyControl(0x6E);
@@ -285,7 +285,7 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
 
 void processConfDataATEM() {
   char *p_data = strstr(message, "ATEM");
-  if (p_data != NULL) {                        // check if it contains any data
+  if (p_data != NULL) {                       // check if it contains any data
     char *p_dataEN = strstr(message, "en3");  // check if switcher is enable
     if (p_dataEN != NULL) {
       strcpy(ATEM.enable, "checked");
@@ -346,6 +346,7 @@ void processConfDataATEM() {
     Serial2.printf("\nSwitcher %d enable: %s", ATEM.pos, ATEM.enable);
     Serial2.printf("\nSwitcher %d inputSave: %s", ATEM.pos, ATEM.p_save);
 #endif
+    Serial2.printf("\r\n");
   }
 }
 
@@ -546,7 +547,7 @@ void processSwitcherData(char *gdata, byte len, Switcher &sw) {
 }
 
 /*ATEM*/
-void ATEM_handle() {   // TODO generate ATEM.code
+void ATEM_handle() {                                               // TODO generate ATEM.code
   if (memcmp(ATEM.enable, "checked", sizeof(ATEM.enable)) == 0) {  // check if BMDSDIControl is enabled
     uint8_t send = false;
     if (sdiTallyControl.available()) {
@@ -554,17 +555,25 @@ void ATEM_handle() {   // TODO generate ATEM.code
         bool program;
         bool preview;
         sdiTallyControl.getCameraTally((q + 1), program, preview);
-        if (ATEM.tallyValue[q][0] != program) {
+        if (ATEM.tallyValue[q][0] != program || ATEM.tallyValue[q][1] != preview) {
           ATEM.tallyValue[q][0] = program;
-          send = true;
-        }
-        if (ATEM.tallyValue[q][1] != preview) {
           ATEM.tallyValue[q][1] = preview;
+
+          if (q < 5) {  // wireless works only for 5 channels
+            if (ATEM.tallyValue[q][0] == true) {
+              ATEM.code = (~(0b111 << (q * 3)) & ATEM.code) | ACTIVE << (q * 3);
+            } else if (ATEM.tallyValue[q][1] == true) {
+              ATEM.code = (~(0b111 << (q * 3)) & ATEM.code) | PREVIEW << (q * 3);
+            } else {
+              ATEM.code = (~(0b111 << (q * 3)) & ATEM.code) | NOTHING << (q * 3);
+            }
+          }
           send = true;
         }
       }
       if (send) {
         setBMD_SDI_OUT();
+        sendCodeWireless();
       }
     }
     /*if (sdiTallyControl.available()) {
@@ -653,6 +662,9 @@ void eepromRead(Switcher &sw) {
   }
 }
 void eepromRead_ATEM() {
+  for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) {
+    ATEM.inputNumber[i] = EEPROM.read(ATEM.pos + 4 + i);
+  }
   if (EEPROM.read(ATEM.pos + 4 + MAX_CHAN_NUM) == 1) {
     strcpy(ATEM.enable, "checked");
   } else {

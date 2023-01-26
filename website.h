@@ -459,7 +459,7 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("<td><input type=\"number\" id=\"T1\" name=\"S31\" min=\"0\" max=\"255\" placeholder=\"vMix input number\""));
      client.print(F("value=\""));
      client.print(sw3.inputNumber[0]);
-     client.print(F("\"></td>"));
+     client.print(F("\" disabled></td>"));
      client.print(F("</tr>"));
      client.print(F("<tr>"));
      client.print(F("<td><label for=\"T2\">2. Camera</label></td>"));
@@ -474,7 +474,7 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("<td><input type=\"number\" id=\"T2\" name=\"S32\" min=\"0\" max=\"255\" placeholder=\"vMix input number\""));
      client.print(F("value=\""));
      client.print(sw3.inputNumber[1]);
-     client.print(F("\"></td>"));
+     client.print(F("\" disabled></td>"));
      client.print(F("</tr>"));
      client.print(F("<tr>"));
      client.print(F("<td><label for=\"T3\">3. Camera</label></td>"));
@@ -489,7 +489,7 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("<td><input type=\"number\" id=\"T3\" name=\"S33\" min=\"0\" max=\"255\" placeholder=\"vMix input number\""));
      client.print(F("value=\""));
      client.print(sw3.inputNumber[2]);
-     client.print(F("\"></td>"));
+     client.print(F("\" disabled></td>"));
      client.print(F("</tr>"));
      client.print(F("<tr>"));
      client.print(F("<td><label for=\"T4\">4. Camera</label></td>"));
@@ -504,7 +504,7 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("<td><input type=\"number\" id=\"T4\" name=\"S34\" min=\"0\" max=\"255\" placeholder=\"vMix input number\""));
      client.print(F("value=\""));
      client.print(sw3.inputNumber[3]);
-     client.print(F("\"></td>"));
+     client.print(F("\" disabled></td>"));
      client.print(F("</tr>"));
      client.print(F("<tr>"));
      client.print(F("<td><label for=\"T5\">5. Camera</label></td>"));
@@ -519,7 +519,7 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("<td><input type=\"number\" id=\"T5\" name=\"S35\" min=\"0\" max=\"255\" placeholder=\"vMix input number\""));
      client.print(F("value=\""));
      client.print(sw3.inputNumber[4]);
-     client.print(F("\"></td>"));
+     client.print(F("\" disabled></td>"));
      client.print(F("</tr>"));
      client.print(F("<tr>"));
      client.print(F("<td><label for=\"T6\">6. Camera</label></td>"));
@@ -533,8 +533,8 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("\"></td>"));
      client.print(F("<td><input type=\"number\" id=\"T6\" name=\"S36\" min=\"0\" max=\"255\" placeholder=\"vMix input number\""));
      client.print(F("value=\""));
-     client.print(sw3.inputNumber[0]);
-     client.print(F("\"></td>"));
+     client.print(sw3.inputNumber[5]);
+     client.print(F("\" disabled></td>"));
      client.print(F("</tr>"));
      client.print(F("<tr>"));
      client.print(F("<td><label for=\"T7\">7. Camera</label></td>"));
@@ -549,7 +549,7 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("<td><input type=\"number\" id=\"T7\" name=\"S37\" min=\"0\" max=\"255\" placeholder=\"vMix input number\""));
      client.print(F("value=\""));
      client.print(sw3.inputNumber[6]);
-     client.print(F("\"></td>"));
+     client.print(F("\" disabled></td>"));
      client.print(F("</tr>"));
      client.print(F("<tr>"));
      client.print(F("<td><label for=\"T8\">8. Camera</label></td>"));
@@ -564,7 +564,7 @@ void website(EthernetClient client, Switcher &sw1, Switcher &sw2, Switcher &sw3,
      client.print(F("<td><input type=\"number\" id=\"T8\" name=\"S38\" min=\"0\" max=\"255\" placeholder=\"vMix input number\""));
      client.print(F("value=\""));
      client.print(sw3.inputNumber[7]);
-     client.print(F("\"></td>"));
+     client.print(F("\" disabled></td>"));
      client.print(F("</tr>"));
      client.print(F("</table>"));
      client.print(F("</div>"));
