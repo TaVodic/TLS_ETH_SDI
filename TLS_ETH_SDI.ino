@@ -9,7 +9,7 @@
 #define DEBUG
 #define EEPROMe
 #define DHCP
-// #define ATEM_enable
+#define ATEM_enable
 
 #define VERSION "TLS_ETH_SDI_23.01.23_VER01"
 
@@ -37,7 +37,7 @@ struct Switcher {
   uint8_t inputNumber[5] = {1, 2, 3, 4, 5};
   uint8_t keepAliveFlag = 0;
   unsigned long cMillisKeepAlive;                                       // keepAlive
-  uint8_t tallyValue[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};  // program, preview
+  uint8_t tallyValue[5][2] = {0};  // [channel][program=0 | preview=1]
 };
 
 // BMD_SDITallyControl_I2C sdiTallyControl(0x6E);
@@ -487,17 +487,24 @@ void ATEM_handle() {
         bool program;
         bool preview;
         sdiTallyControl.getCameraTally((q + 1), program, preview);
-        if (ATEM.tallyValue[q][0] != program) {
+        if (ATEM.tallyValue[q][0] != program || ATEM.tallyValue[q][1] != preview) {
           ATEM.tallyValue[q][0] = program;
-          send = true;
-        }
-        if (ATEM.tallyValue[q][1] != preview) {
           ATEM.tallyValue[q][1] = preview;
+
+          if (ATEM.tallyValue[q][0] == true) {
+            ATEM.code = (~(0b111 << (q * 3)) & ATEM.code) | ACTIVE << (q * 3);
+          } else if (ATEM.tallyValue[q][1] == true) {
+            ATEM.code = (~(0b111 << (q * 3)) & ATEM.code) | PREVIEW << (q * 3);
+          } else {
+            ATEM.code = (~(0b111 << (q * 3)) & ATEM.code) | NOTHING << (q * 3);
+          }
+
           send = true;
         }
       }
       if (send) {
         setBMD_SDI_OUT();
+        sendCodeWireless();
       }
     }
     /*if (sdiTallyControl.available()) {
@@ -545,7 +552,7 @@ void sendCodeWireless() {
 
 void setBMD_SDI_OUT() {
   Serial2.printf("SDI_OUT: ");
-  uint8_t finalTallyValue[5][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+  uint8_t finalTallyValue[5][2] = {0};
   for (uint8_t q = 0; q < 5; q++) {
     if (vMix_1.tallyValue[q][0] || vMix_2.tallyValue[q][0] || ATEM.tallyValue[q][0]) {
       finalTallyValue[q][0] = true;
