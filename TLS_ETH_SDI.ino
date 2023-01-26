@@ -11,12 +11,12 @@
 #define DHCP
 #define ATEM_enable
 
-#define VERSION "TLS_ETH_SDI_23.01.23_VER01"
+#define VERSION "TLS_ETH_SDI_26.01.23_VER01"
 
 #define TIMEOUT       2000  // connecting to switcher
 #define KEEPALIVE     2000  // comment to disable keepalive
 #define TTK           1000  // time to kill - cas do ktoreho ak strizna neodpovie, restartuje sa spojenie
-#define RESEND        1000  // wireless hc12 resend time - default 100
+#define RESEND        100   // wireless hc12 resend time - default 100
 #define DEFAULT_VALUE 0b001001001001001
 #define ACTIVE        3  // 3
 #define PREVIEW       2  // 2
@@ -36,7 +36,7 @@ struct Switcher {
   uint16_t code = DEFAULT_VALUE;  // 4681;
   uint8_t inputNumber[5] = {1, 2, 3, 4, 5};
   uint8_t keepAliveFlag = 0;
-  unsigned long cMillisKeepAlive;                                       // keepAlive
+  unsigned long cMillisKeepAlive;  // keepAlive
   uint8_t tallyValue[5][2] = {0};  // [channel][program=0 | preview=1]
 };
 
@@ -208,8 +208,10 @@ void processConfData(char *ipAddr, char *enable, Switcher &sw) {
     }
 
     p_data += 8;  // move to first data ("IPaddr1=")
-    // Serial.print((*p_data) - 48);
+// Serial.print((*p_data) - 48);
+#ifdef DEBUG
     Serial2.printf("\nSwitcher %d IPadd:", sw.pos);
+#endif
     for (uint8_t q = 0; q < 4; q++) {
       uint8_t count = 0;
       while (*p_data != '.' && *p_data != '&') {
@@ -551,7 +553,9 @@ void sendCodeWireless() {
 }
 
 void setBMD_SDI_OUT() {
+#ifdef DEBUG
   Serial2.printf("SDI_OUT: ");
+#endif
   uint8_t finalTallyValue[5][2] = {0};
   for (uint8_t q = 0; q < 5; q++) {
     if (vMix_1.tallyValue[q][0] || vMix_2.tallyValue[q][0] || ATEM.tallyValue[q][0]) {
@@ -560,10 +564,14 @@ void setBMD_SDI_OUT() {
     if ((vMix_1.tallyValue[q][1] || vMix_2.tallyValue[q][1] || ATEM.tallyValue[q][1]) && finalTallyValue[q][0] != true) {
       finalTallyValue[q][1] = true;
     }
+#ifdef DEBUG
     Serial2.printf("[%d, %d] ", finalTallyValue[q][0], finalTallyValue[q][1]);
+#endif
     sdiTallyControl.setCameraTally((q + 1), finalTallyValue[q][0], finalTallyValue[q][1]);
   }
+#ifdef DEBUG
   Serial2.printf("\n");
+#endif
 }
 
 void setCodeDefaulte(Switcher &sw) {
