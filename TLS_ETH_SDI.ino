@@ -6,16 +6,16 @@
 
 // developed from TLS_ETH_hybrid_RLS02_22.10.22
 
-//#define DEBUG
+#define DEBUG
 #define EEPROMe
 #define DHCP
 #define ATEM_enable
 
 #define VERSION "TLS_ETH_SDI_26.01.23_VER02"
 
-#define MAX_CHAN_NUM  8
-#define TIMEOUT       2000               // connecting to switcher
-#define KEEPALIVE     2000               // comment to disable keepalive
+#define MAX_CHAN_NUM 8
+#define TIMEOUT      2000  // connecting to switcher
+// #define KEEPALIVE     2000               // comment to disable keepalive
 #define TTK           1000               // time to kill - cas do ktoreho ak strizna neodpovie, restartuje sa spojenie
 #define RESEND        100                // wireless hc12 resend time - default 100
 #define DEFAULT_VALUE 0b001001001001001  // 4681
@@ -553,7 +553,14 @@ void ATEM_handle() {                                               // TODO gener
   if (memcmp(ATEM.enable, "checked", sizeof(ATEM.enable)) == 0) {  // check if BMDSDIControl is enabled
     uint8_t send = false;
     if (sdiTallyControl.available()) {
-      for (int q = 0; q < MAX_CHAN_NUM; q++) {
+      
+      uint8_t buffer[100];  // TODO shorten array lenght
+      uint8_t len = sdiTallyControl.read(buffer, 16);
+
+      Serial2.write(buffer, len);  // show received data
+      // TODO parse incoming data
+
+      /*for (int q = 0; q < MAX_CHAN_NUM; q++) {
         bool program;
         bool preview;
         sdiTallyControl.getCameraTally((q + 1), program, preview);
@@ -576,28 +583,8 @@ void ATEM_handle() {                                               // TODO gener
       if (send) {
         sendCodeWireless();
         setBMD_SDI_OUT();
-      }
-    }
-    /*if (sdiTallyControl.available()) {
-      uint8_t buffer[100];  // TODO shorten occupaded space
-      uint8_t len = sdiTallyControl.read(buffer);
-
-      Serial2.write(buffer, len);  // show received data
-      // TODO parse incoming data
-
-      for (int q = 0; q < 5; q++) {
-        switch (NULL) {  // TODO add variable of specific camera state
-          case '0':
-            sw.code = (~(0b111 << (q * 3)) & sw.code) | NOTHING << (q * 3);
-            break;
-          case '2':
-            sw.code = (~(0b111 << (q * 3)) & sw.code) | PREVIEW << (q * 3);
-            break;
-          case '1':
-            sw.code = (~(0b111 << (q * 3)) & sw.code) | ACTIVE << (q * 3);
-            break;
-        }
       }*/
+    }
   } else {
     setCodeDefaulte(ATEM);
   }
@@ -635,12 +622,14 @@ void setBMD_SDI_OUT() {
     }
 #ifdef DEBUG
     Serial2.printf("[%d, %d] ", finalTallyValue[q][0], finalTallyValue[q][1]);
-    Serial2.printf("\n");
 #endif
 #ifdef ATEM_enable
     sdiTallyControl.setCameraTally((q + 1), finalTallyValue[q][0], finalTallyValue[q][1]);
 #endif
   }
+#ifdef DEBUG
+  Serial2.printf("\n");
+#endif
 }
 
 void setCodeDefaulte(Switcher &sw) {
