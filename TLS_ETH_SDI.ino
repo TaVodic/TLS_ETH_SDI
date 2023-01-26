@@ -13,11 +13,11 @@
 
 #define VERSION "TLS_ETH_SDI_26.01.23_VER02"
 
-#define MAX_CHAN_NUM 8
-#define TIMEOUT      2000  // connecting to switcher
-#define KEEPALIVE     2000  // comment to disable keepalive
+#define MAX_CHAN_NUM  8
+#define TIMEOUT       2000               // connecting to switcher
+#define KEEPALIVE     2000               // comment to disable keepalive
 #define TTK           1000               // time to kill - cas do ktoreho ak strizna neodpovie, restartuje sa spojenie
-#define RESEND        1000               // wireless hc12 resend time - default 100
+#define RESEND        100                // wireless hc12 resend time - default 100
 #define DEFAULT_VALUE 0b001001001001001  // 4681
 #define ACTIVE        3                  // 3
 #define PREVIEW       2                  // 2
@@ -572,8 +572,8 @@ void ATEM_handle() {                                               // TODO gener
         }
       }
       if (send) {
-        setBMD_SDI_OUT();
         sendCodeWireless();
+        setBMD_SDI_OUT();
       }
     }
     /*if (sdiTallyControl.available()) {
@@ -620,7 +620,9 @@ void sendCodeWireless() {
 }
 
 void setBMD_SDI_OUT() {
+#ifdef DEBUG
   Serial2.printf("SDI_OUT: ");
+#endif
   uint8_t finalTallyValue[MAX_CHAN_NUM][2] = {0};
   for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
     if (vMix_1.tallyValue[q][0] || vMix_2.tallyValue[q][0] || ATEM.tallyValue[q][0]) {
@@ -629,12 +631,14 @@ void setBMD_SDI_OUT() {
     if ((vMix_1.tallyValue[q][1] || vMix_2.tallyValue[q][1] || ATEM.tallyValue[q][1]) && finalTallyValue[q][0] != true) {
       finalTallyValue[q][1] = true;
     }
+#ifdef DEBUG
     Serial2.printf("[%d, %d] ", finalTallyValue[q][0], finalTallyValue[q][1]);
+    Serial2.printf("\n");
+#endif
 #ifdef ATEM_enable
     sdiTallyControl.setCameraTally((q + 1), finalTallyValue[q][0], finalTallyValue[q][1]);
 #endif
-  }
-  Serial2.printf("\n");
+  }  
 }
 
 void setCodeDefaulte(Switcher &sw) {
