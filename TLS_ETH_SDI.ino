@@ -6,12 +6,12 @@
 
 // developed from TLS_ETH_hybrid_RLS02_22.10.22
 
-//#define DEBUG
+#define DEBUG
 #define EEPROMe
 #define DHCP
-#define ATEM_enable
+// #define ATEM_enable
 
-#define VERSION "TLS_ETH_SDI_19.02.23_VER03.0"
+#define VERSION "TLS_ETH_SDI_19.02.23_VER03.1"
 
 #define MAX_CHAN_NUM  8
 #define TIMEOUT       2000               // connecting to switcher
@@ -86,6 +86,8 @@ void setup() {
   eepromRead(vMix_2);
   eepromRead_ATEM();
 #endif
+
+  setDatavideoPins();
 
 #ifdef DHCP
   if (Ethernet.begin(mac) == 0) {
@@ -537,6 +539,7 @@ void processSwitcherData(char *gdata, byte len, Switcher &sw) {
 
     sendCodeWireless();
     setBMD_SDI_OUT();
+    sendDatavideo();
 
     /*Serial2.printf("%d()--", sw.pos);
     Serial2.println(sw.code, BIN);*/
@@ -549,7 +552,7 @@ void processSwitcherData(char *gdata, byte len, Switcher &sw) {
 }
 
 /*ATEM*/
-void ATEM_handle() {                                               // TODO generate ATEM.code
+void ATEM_handle() {
   if (memcmp(ATEM.enable, "checked", sizeof(ATEM.enable)) == 0) {  // check if BMDSDIControl is enabled
     uint8_t send = false;
     if (sdiTallyControl.available()) {
@@ -576,6 +579,7 @@ void ATEM_handle() {                                               // TODO gener
       if (send) {
         sendCodeWireless();
         setBMD_SDI_OUT();
+        sendDatavideo();
       }
     }
     /*if (sdiTallyControl.available()) {
@@ -635,12 +639,15 @@ void setBMD_SDI_OUT() {
     }
 #ifdef DEBUG
     Serial2.printf("[%d, %d] ", finalTallyValue[q][0], finalTallyValue[q][1]);
-    Serial2.printf("\n");
+
 #endif
 #ifdef ATEM_enable
     sdiTallyControl.setCameraTally((q + 1), finalTallyValue[q][0], finalTallyValue[q][1]);
 #endif
   }
+#ifdef DEBUG
+  Serial2.printf("\n");
+#endif
 }
 
 void setCodeDefaulte(Switcher &sw) {
@@ -650,6 +657,52 @@ void setCodeDefaulte(Switcher &sw) {
   }
   for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
     sw.tallyValue[q][1] = 0;
+  }
+}
+
+void sendDatavideo() {
+  uint16_t datavideo_code[4] = {1};
+  for (uint8_t q = 0; q < 4; q++) {
+    if (((vMix_1.code >> (q * 3)) & 0b111) > ((vMix_2.code >> (q * 3)) & 0b111)) {
+      datavideo_code[q] = ((vMix_1.code >> (q * 3)) & 0b111);
+    } else {
+      datavideo_code[q] = ((vMix_2.code >> (q * 3)) & 0b111);
+    }
+    if (((ATEM.code >> (q * 3)) & 0b111) > datavideo_code[q]) {
+      datavideo_code[q] = ((ATEM.code >> (q * 3)) & 0b111);
+    }
+
+    if (q == 0) {
+      switch (datavideo_code[0]) {
+        case NOTHING:
+          digitalWrite(30, LOW);  // 30 prieview
+          digitalWrite(23, LOW);  // 23 program
+          break;
+        case PREVIEW:
+          digitalWrite(30, HIGH);  // 30 prieview
+          digitalWrite(23, LOW);   // 23 program
+          break;
+        case ACTIVE:
+          digitalWrite(30, LOW);   // 30 prieview
+          digitalWrite(23, HIGH);  // 23 program
+          break;
+      }
+    } else {
+      switch (datavideo_code[q]) {
+        case NOTHING:
+          digitalWrite(q * 2 + 22, LOW);  // 24,26,28 prieview
+          digitalWrite(q * 2 + 23, LOW);  // 25,27,29 program
+          break;
+        case PREVIEW:
+          digitalWrite(q * 2 + 22, HIGH);  // 24,26,28 prieview
+          digitalWrite(q * 2 + 23, LOW);   // 25,27,29 program
+          break;
+        case ACTIVE:
+          digitalWrite(q * 2 + 22, LOW);   // 24,26,28 prieview
+          digitalWrite(q * 2 + 23, HIGH);  // 25,27,29 program
+          break;
+      }
+    }
   }
 }
 
@@ -678,6 +731,11 @@ void eepromRead_ATEM() {
   }
 }
 
+void setDatavideoPins() {
+  for (int i = 23; i < 31; i++) {
+    pinMode(i, OUTPUT);
+  }
+}
 /*
   static const uint8_t CLOSED      = 0x00; 0
   static const uint8_t INIT        = 0x13; 19
