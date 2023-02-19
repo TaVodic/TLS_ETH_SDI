@@ -11,7 +11,7 @@
 #define DHCP
 #define ATEM_enable
 
-#define VERSION "TLS_ETH_SDI_26.01.23_VER02"
+#define VERSION "TLS_ETH_SDI_19.02.23_VER03.0"
 
 #define MAX_CHAN_NUM  8
 #define TIMEOUT       2000               // connecting to switcher
