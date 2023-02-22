@@ -1,0 +1,9 @@
+{
+    "configuration": "cpu=atmega2560",
+    "board": "arduino:avr:mega",
+    "port": "COM14",
+    "programmer": "arduino:arduinoisp",
+    "sketch": "TLS_ETH_SDI.ino",
+    "output": "C:/Users/Martin/Documents/Arduino/Build.path" 
+
+}
