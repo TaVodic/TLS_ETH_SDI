@@ -9,9 +9,9 @@
 #define DEBUG
 #define EEPROMe
 #define DHCP
-// #define ATEM_enable
+#define ATEM_enable
 
-#define VERSION "TLS_ETH_SDI_19.02.23_VER03.1"
+#define VERSION "TLS_ETH_SDI_23.02.23_VER03.1"
 
 #define MAX_CHAN_NUM  8
 #define TIMEOUT       2000               // connecting to switcher
@@ -24,21 +24,21 @@
 #define NOTHING       1                  // 1
 #define CALL          4                  // 4
 
-byte mac[] = {0x02, 0x54, 0x4C, 0x53, 0x00, 0x04};
-uint8_t TLS_IPaddr[4] = {192, 168, 1, 118};
+byte mac[] = {0x02, 0x54, 0x4C, 0x53, 0x00, 0x05};
+uint8_t TLS_IPaddr[4] = {192, 168, 1, 100};
 
 struct Switcher {
   uint8_t pos;                            // eeprom position
   uint8_t IPaddr[4] = {192, 168, 0, 10};  // mixer IP address
   char enable[8];                         // enable string
   const char *p_save;
-  uint8_t status;                 // connected or disconnected
-  uint8_t initialized;            // runned
-  uint16_t code = DEFAULT_VALUE;  // for wireless
-  uint8_t inputNumber[MAX_CHAN_NUM] = {0};
-  uint8_t keepAliveFlag = 0;
-  unsigned long cMillisKeepAlive;             // keepAlive
+  uint8_t status;             // connected or disconnected
+  uint8_t initialized;        // runned
+  uint8_t keepAliveFlag = 0;  // keepAlive
+  unsigned long cMillisKeepAlive;
+  uint16_t code = DEFAULT_VALUE;              // for wireless
   uint8_t tallyValue[MAX_CHAN_NUM][2] = {0};  // for ATEM [channel][program=0 | preview=1]
+  uint8_t inputNumber[MAX_CHAN_NUM] = {1, 2, 3, 4, 5, 6, 7, 8};
 };
 
 // BMD_SDITallyControl_I2C sdiTallyControl(0x6E);
@@ -63,8 +63,6 @@ unsigned long cMillisTimeout;  // timeout
 unsigned long cMillisResend;   // resend
 char message[300];
 
-uint8_t flag = 0;
-
 void setup() {
   Serial2.begin(115200);
   Serial1.begin(9600);
@@ -84,7 +82,7 @@ void setup() {
 #ifdef EEPROMe
   eepromRead(vMix_1);
   eepromRead(vMix_2);
-  eepromRead_ATEM();
+  // eepromRead_ATEM(); use ATEM input number default values 1-8
 #endif
 
   setDatavideoPins();
@@ -305,6 +303,8 @@ void processConfDataATEM() {
       p_dataEN = NULL;
     }
 
+    // data from ATEM column must not be modified
+    /* 
     p_data += 9;  // move to inputsNumbers ("ATEM&S31=")
     for (uint8_t q = 0; q < MAX_CHAN_NUM; q++) {
       uint8_t count = 0;
@@ -322,6 +322,7 @@ void processConfDataATEM() {
       }
       p_data += 5;
     }
+    */
 
 #ifdef EEPROMe
     if (strstr(message, "save")) {
@@ -661,7 +662,7 @@ void setCodeDefaulte(Switcher &sw) {
 }
 
 void sendDatavideo() {
-  uint16_t datavideo_code[4] = {1};
+  uint16_t datavideo_code[4] = {NOTHING};
   for (uint8_t q = 0; q < 4; q++) {
     if (((vMix_1.code >> (q * 3)) & 0b111) > ((vMix_2.code >> (q * 3)) & 0b111)) {
       datavideo_code[q] = ((vMix_1.code >> (q * 3)) & 0b111);
@@ -672,7 +673,7 @@ void sendDatavideo() {
       datavideo_code[q] = ((ATEM.code >> (q * 3)) & 0b111);
     }
 
-    if (q == 0) {
+    if (q == 0) {  // pins for first video input are not in order with others
       switch (datavideo_code[0]) {
         case NOTHING:
           digitalWrite(30, LOW);  // 30 prieview
