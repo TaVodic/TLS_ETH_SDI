@@ -4,14 +4,12 @@
 #include <MemoryFree.h>
 #include <SPI.h>
 
-// developed from TLS_ETH_hybrid_RLS02_22.10.22
-
 #define DEBUG
 #define EEPROMe
 #define DHCP
 #define ATEM_enable
 
-#define VERSION "TLS_ETH_SDI_23.02.23_VER03.1"
+#define VERSION "TLS_ETH_SDI_23.02.23_VER03.2"
 
 #define MAX_CHAN_NUM  8
 #define TIMEOUT       2000               // connecting to switcher
@@ -82,7 +80,7 @@ void setup() {
 #ifdef EEPROMe
   eepromRead(vMix_1);
   eepromRead(vMix_2);
-  // eepromRead_ATEM(); use ATEM input number default values 1-8
+  eepromRead_ATEM(); // use ATEM input number default values 1-8
 #endif
 
   setDatavideoPins();
@@ -326,10 +324,10 @@ void processConfDataATEM() {
 
 #ifdef EEPROMe
     if (strstr(message, "save")) {
-      for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) {
+      /*for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) { // make no sense in context of ATEM camera ID system
         EEPROM.write(ATEM.pos + 4 + i, ATEM.inputNumber[i]);
         // Serial.println("saving input numbers");
-      }
+      }*/
       ATEM.p_save = NULL;
     } else {
       checkInputNumberProfile(ATEM);
@@ -722,9 +720,9 @@ void eepromRead(Switcher &sw) {
   }
 }
 void eepromRead_ATEM() {
-  for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) {
+  /*for (uint8_t i = 0; i < MAX_CHAN_NUM; i++) { // make no sense in context of ATEM camera ID system
     ATEM.inputNumber[i] = EEPROM.read(ATEM.pos + 4 + i);
-  }
+  }*/
   if (EEPROM.read(ATEM.pos + 4 + MAX_CHAN_NUM) == 1) {
     strcpy(ATEM.enable, "checked");
   } else {
